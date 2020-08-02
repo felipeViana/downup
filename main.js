@@ -41,18 +41,24 @@ var canJump = true
 
 var gameOver = false
 
+var TOTAL_PLATFORMS = 1000;
+
+var gameOverText;
+
 function preload () {
   this.load.image('platform', 'assets/platform.png');
   this.load.image('ground', 'assets/ground.png');
   this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
-function create () {
-  // this.physics.world.setBounds(0, 0, 400, 300);
-  // this.cameras.main.setViewport(config.x, config.y, 400, 300).setBackgroundColor('#000');
+function spawnPlatform(y) {
+  const x = Math.random()*500 + 50
 
-  // this.game.world.setBounds(0, 0, 300, 400)
-  this.cameras.main.setBounds(0, 0, 600, 800);
+  platforms.create(x, y, 'platform');
+}
+
+function create () {
+
 
   platforms = this.physics.add.group({immovable: true});
 
@@ -62,15 +68,13 @@ function create () {
   platforms.create(150, 500, 'platform');
   platforms.create(275, 200, 'platform');
 
-  platforms.create(300, 0, 'platform');
-  platforms.create(100, -500, 'platform');
-  platforms.create(500, -1000, 'platform');
-  platforms.create(300, -1500, 'platform');
-  platforms.create(200, -2000, 'platform');
-
+  let y = -50;
+  for (i = 0; i < TOTAL_PLATFORMS; i++) {
+    spawnPlatform(y);
+    y -= Math.random() * 200 + 100
+  }
 
   player = this.physics.add.sprite(100, 800-90, 'dude');
-  // player.setCollideWorldBounds(true);
 
   this.anims.create({
     key: 'left',
@@ -95,14 +99,19 @@ function create () {
   this.physics.add.collider(player, platforms, () => canJump = true);
 
   spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+
+  scoreText = this.add.text(0, 0, 'Floors: ', { fontSize: '32px', fill: '#fff' });
+  gameOverText = this.add.text(200, 350, '', { fontSize: '32px', fill: '#fff' });
 }
+
 
 function update (time, delta) {
   if (gameOver) {
+    platforms.setVelocityY(0)
+    gameOverText.setText('GAME OVER')
     return;
   }
-
-  console.log(player.body.y);
 
   if (player.body.y < -100 || player.body.y > 900) {
     gameOver = true
