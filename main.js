@@ -55,6 +55,7 @@ function preload () {
   this.load.image('platform', 'assets/platform.png');
   this.load.image('ground', 'assets/ground.png');
   this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
+  this.load.spritesheet('playerRotated', 'assets/playerRotated.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function spawnPlatform(y) {
@@ -86,7 +87,12 @@ function create () {
     frameRate: 10,
     repeat: -1
   });
-
+  this.anims.create({
+    key: 'leftRotated',
+    frames: this.anims.generateFrameNumbers('playerRotated', { start: 0, end: 2 }),
+    frameRate: 10,
+    repeat: -1
+  });
 
   this.anims.create({
     key: 'turn',
@@ -94,8 +100,20 @@ function create () {
     frameRate: 20
   });
   this.anims.create({
+    key: 'turnRotated',
+    frames: [ { key: 'playerRotated', frame: 3 } ],
+    frameRate: 20
+  });
+
+  this.anims.create({
     key: 'right',
     frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+    frameRate: 10,
+    repeat: -1
+  });
+  this.anims.create({
+    key: 'rightRotated',
+    frames: this.anims.generateFrameNumbers('playerRotated', { start: 4, end: 7 }),
     frameRate: 10,
     repeat: -1
   });
@@ -157,13 +175,28 @@ function update (time, delta) {
 
   if (cursors.left.isDown && player.body.x > 0) {
     player.setVelocityX(-PLAYER_HORIZONTAL_SPEED);
-    player.anims.play('left', true);
+
+    if (gravityDown) {
+      player.anims.play('left', true);
+    } else {
+      player.anims.play('leftRotated', true);
+    }
   } else if (cursors.right.isDown && player.body.x < 600 - 32) {
     player.setVelocityX(PLAYER_HORIZONTAL_SPEED);
-    player.anims.play('right', true);
+
+    if (gravityDown) {
+      player.anims.play('right', true);
+    } else {
+      player.anims.play('rightRotated', true);
+    }
   } else {
     player.setVelocityX(0);
-    player.anims.play('turn');
+
+    if (gravityDown) {
+      player.anims.play('turn');
+    } else {
+      player.anims.play('turnRotated');
+    }
   }
 
   if (Phaser.Input.Keyboard.JustDown(spacebar) && canJump) {
