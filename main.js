@@ -2,11 +2,17 @@ var config = {
   type: Phaser.AUTO,
   width: 600,
   height: 800,
+  scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 600,
+      height: 800
+  },
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: true
+      debug: false
     }
   },
   scene: {
@@ -30,23 +36,41 @@ var MAP_SCROLL_SPEED = 80;
 
 var gravityDown = true;
 
+var isScrolling = false;
+var canJump = true
+
+var gameOver = false
+
 function preload () {
-  this.load.image('ground', 'assets/platform.png');
+  this.load.image('platform', 'assets/platform.png');
+  this.load.image('ground', 'assets/ground.png');
   this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create () {
-  platforms = this.physics.add.staticGroup();
+  // this.physics.world.setBounds(0, 0, 400, 300);
+  // this.cameras.main.setViewport(config.x, config.y, 400, 300).setBackgroundColor('#000');
 
-  platforms.create(400, 800-32, 'ground').setScale(2).refreshBody();
+  // this.game.world.setBounds(0, 0, 300, 400)
+  this.cameras.main.setBounds(0, 0, 600, 800);
 
-  // platforms.create(600, 400, 'ground');
-  // platforms.create(50, 250, 'ground');
-  // platforms.create(750, 220, 'ground');
+  platforms = this.physics.add.group({immovable: true});
 
-  player = this.physics.add.sprite(100, 710, 'dude');
+  platforms.create(400, 800-32, 'ground');
 
-  player.setCollideWorldBounds(true);
+  platforms.create(400, 500, 'platform');
+  platforms.create(150, 500, 'platform');
+  platforms.create(275, 200, 'platform');
+
+  platforms.create(300, 0, 'platform');
+  platforms.create(100, -500, 'platform');
+  platforms.create(500, -1000, 'platform');
+  platforms.create(300, -1500, 'platform');
+  platforms.create(200, -2000, 'platform');
+
+
+  player = this.physics.add.sprite(100, 800-90, 'dude');
+  // player.setCollideWorldBounds(true);
 
   this.anims.create({
     key: 'left',
@@ -68,18 +92,31 @@ function create () {
 
   cursors = this.input.keyboard.createCursorKeys();
 
-  this.physics.add.collider(player, platforms);
+  this.physics.add.collider(player, platforms, () => canJump = true);
 
   spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 }
 
-function update () {
-  platforms.create(750, 220, 'ground');
+function update (time, delta) {
+  if (gameOver) {
+    return;
+  }
 
-  if (cursors.left.isDown) {
+  console.log(player.body.y);
+
+  if (player.body.y < -100 || player.body.y > 900) {
+    gameOver = true
+  }
+
+  if (player.body.y < 300) {
+    isScrolling = true
+    platforms.setVelocityY(MAP_SCROLL_SPEED);
+  }
+
+  if (cursors.left.isDown && player.body.x > 0) {
     player.setVelocityX(-PLAYER_HORIZONTAL_SPEED);
     player.anims.play('left', true);
-  } else if (cursors.right.isDown) {
+  } else if (cursors.right.isDown && player.body.x < 600 - 32) {
     player.setVelocityX(PLAYER_HORIZONTAL_SPEED);
     player.anims.play('right', true);
   } else {
@@ -87,12 +124,16 @@ function update () {
     player.anims.play('turn');
   }
 
-  if (Phaser.Input.Keyboard.JustDown(spacebar)) {
+  if (Phaser.Input.Keyboard.JustDown(spacebar) && canJump) {
+    canJump = false;
+
     if (gravityDown) {
-      player.setVelocityY(-PLAYER_VERTICAL_SPEED);
+      player.setVelocityY(-PLAYER_VERTICAL_SPEED/2);
+      player.body.gravity.y = -PLAYER_VERTICAL_SPEED/2;
       gravityDown = false;
     } else {
-      player.setVelocityY(PLAYER_VERTICAL_SPEED);
+      player.setVelocityY(PLAYER_VERTICAL_SPEED/2);
+      player.body.gravity.y = PLAYER_VERTICAL_SPEED/2;
       gravityDown = true;
     }
   }
