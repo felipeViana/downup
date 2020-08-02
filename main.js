@@ -41,9 +41,15 @@ var canJump = true
 
 var gameOver = false
 
-var TOTAL_PLATFORMS = 1000;
+var TOTAL_PLATFORMS = 97;
 
 var gameOverText;
+
+var score = 0;
+
+var platformsCurrentVelocity = 0;
+
+var win = false;
 
 function preload () {
   this.load.image('platform', 'assets/platform.png');
@@ -101,14 +107,23 @@ function create () {
   spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
 
-  scoreText = this.add.text(0, 0, 'Floors: ', { fontSize: '32px', fill: '#fff' });
+  scoreText = this.add.text(0, 0, 'Floors: 0', { fontSize: '32px', fill: '#fff' });
   gameOverText = this.add.text(200, 350, '', { fontSize: '32px', fill: '#fff' });
+  winText = this.add.text(200, 350, '', { fontSize: '32px', fill: '#fff' });
 }
 
 
 function update (time, delta) {
+  if (win) {
+    platforms.setVelocityY(0);
+    platformsCurrentVelocity = 0;
+    winText.setText('YOU WIN!')
+    return;
+  }
+
   if (gameOver) {
-    platforms.setVelocityY(0)
+    platforms.setVelocityY(0);
+    platformsCurrentVelocity = 0;
     gameOverText.setText('GAME OVER')
     return;
   }
@@ -120,7 +135,25 @@ function update (time, delta) {
   if (player.body.y < 300) {
     isScrolling = true
     platforms.setVelocityY(MAP_SCROLL_SPEED);
+    platformsCurrentVelocity = MAP_SCROLL_SPEED;
   }
+
+  platforms.getChildren().forEach(function(platform){
+    if (platform.body.y > 900) {
+      platform.destroy();
+      score += 1;
+      scoreText.setText('Floors: ' + score);
+
+      if (score % 5 == 0) {
+        platformsCurrentVelocity += 10;
+        platforms.setVelocityY(platformsCurrentVelocity);
+      }
+
+      if (score >= TOTAL_PLATFORMS + 3) {
+        win = true;
+      }
+    }
+  }, this)
 
   if (cursors.left.isDown && player.body.x > 0) {
     player.setVelocityX(-PLAYER_HORIZONTAL_SPEED);
