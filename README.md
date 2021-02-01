@@ -1,5 +1,5 @@
 # downup
-game made for trijam 80 using Phaser
+game made for trijam 80 using Phaser 3
 
 https://felipeviana.itch.io/downup
 
